@@ -99,8 +99,6 @@ get_loo_mean_surv <- function(fit, times) {
 # @param fit The fitted stan_surv model.
 # @param tau The time horizon for evaluating RMST.
 rmst_check <- function(fit, tau,newdata=NULL) {
-  
-  # nd      <- data.frame(arm = c("A","B"))
   nd      <- newdata
   
   locs    <- df_gk$locations
@@ -137,10 +135,10 @@ rmst_check <- function(fit, tau,newdata=NULL) {
   }else{
     # return the contrast as data frame
     tibble(tau=tau,
-           rmstAA = rmst[,1], 
-           rmstEA = rmst[,2],
-           diffAA_EA = rmst[,1]-rmst[,2],
-           ratioAA_EA=rmst[,1]/rmst[,2])
+           rmstA = rmst[,1], 
+           rmstB = rmst[,2],
+           diffA_B = rmst[,1]-rmst[,2],
+           ratioA_B=rmst[,1]/rmst[,2])
   }
   
 }
@@ -158,19 +156,19 @@ rmst_check_plot <- function(fit,test_df, tau = 12) {
     return (list(df_rmst,p1=p1))
   }else{
     p1<-df_rmst %>% 
-      bayesplot::mcmc_areas(pars = c("rmstAA"),prob = .95) 
+      bayesplot::mcmc_areas(pars = c("rmstA"),prob = .95) 
     # bayesplot::mcmc_hist(pars = c("rmstAA"), ) 
     # +vline_at(rmst_data$RMST.arm0$rmst["Est."], color='green') 
     
     p2<-df_rmst %>% 
-      bayesplot::mcmc_areas(pars = c("rmstEA"),prob = .95) 
+      bayesplot::mcmc_areas(pars = c("rmstB"),prob = .95) 
     # +vline_at(rmst_data$RMST.arm1$rmst["Est."], color='green') 
     
     p3<-df_rmst %>% 
-      bayesplot::mcmc_areas(pars = c("diffAA_EA"),prob = .95) 
+      bayesplot::mcmc_areas(pars = c("diffA_B"),prob = .95) 
     # +vline_at(rmst_data$RMST.arm1$rmst["Est."], color='green') 
     p4<-df_rmst %>% 
-      bayesplot::mcmc_areas(pars = c("ratioAA_EA"),prob = .95) 
+      bayesplot::mcmc_areas(pars = c("ratioA_B"),prob = .95) 
     # +vline_at(rmst_data$RMST.arm1$rmst["Est."], color='green') 
     return(list(df_rmst,p1=p1,p2=p2,p3=p3,p4=p4))
   }
@@ -279,7 +277,11 @@ autoplot.calibrate <- function(object, colour = NULL){
   }
   p <- p +
     aes +
-    geom_point(size = 1,position = "jitter",alpha=0.5) +
+    geom_point(size = 1,
+               # position=position_dodge(.3),
+               position=position_jitter(w = 0.1, h = 0),
+               # position = "jitter",
+               alpha=0.5) +
     geom_abline(slope = 1) +
     facet_wrap(~f_time) +
     scale_shape_discrete(name = "Model") +
@@ -503,7 +505,7 @@ get_upper_tri <- function(cormat){
 ########### required for the ggplot risk table
 RiskSetCount <- function(timeindex, patientsdf,strataoi) {
   atrisk <- NULL
-  survivaltime<-patients$tstop2[patients$Strata==strataoi]
+  survivaltime<-patients$tstop[patients$Strata==strataoi]
   for (t in timeindex)
     atrisk <- c(atrisk, sum(survivaltime >= t))
   df<-data.frame(strata=strataoi,value=atrisk,time=timeindex)
