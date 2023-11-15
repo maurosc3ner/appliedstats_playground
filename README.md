@@ -1,4 +1,4 @@
-# Statistical Inferce
+# Statistical Inference
 
 This is my playground repo to consolidate examples in problems I have faced in statistics.
 
